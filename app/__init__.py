@@ -1,0 +1,1 @@
+# Cognitive Hat Engine package
