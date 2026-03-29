@@ -14,3 +14,6 @@ pip install -r requirements.txt
 cp .env.example .env
 # edit .env with your OPENAI_API_KEY (optional)
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+## Test locally
+curl -X POST http://localhost:8000/analyze   -H "Content-Type: application/json"   -d '{"idea": "Evaluate whether we should launch the new AI product in Germany first"}'
