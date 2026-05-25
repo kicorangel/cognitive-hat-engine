@@ -1,17 +1,38 @@
 from typing import Dict, Any, List, Tuple
 
-from .prompts import ROLES
+def _role_codes_from_state(state: Dict[str, Any]) -> List[str]:
+    roles = state.get("roles") or []
+
+    if roles:
+        return [
+            str(role.get("code", "")).strip()
+            for role in roles
+            if str(role.get("code", "")).strip()
+        ]
+
+    outputs = state.get("outputs", {}) or {}
+    codes = []
+
+    for hat_outputs in outputs.values():
+        for role_code in hat_outputs.keys():
+            if role_code not in codes:
+                codes.append(role_code)
+
+    return codes
 
 
 def _collect_hat_text(state: Dict[str, Any], hat: str) -> str:
     outputs = state.get("outputs", {}).get(hat, {})
     chunks = []
-    for role in ROLES:
+
+    for role in _role_codes_from_state(state):
         role_items = outputs.get(role, [])
         if not role_items:
             continue
+
         last = role_items[-1]
         chunks.append(f"{role}:\n{last.get('content','')}".strip())
+
     return "\n\n".join(chunks)
 
 

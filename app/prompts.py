@@ -84,13 +84,19 @@ def build_role_prompt(
     context: Dict[str, str],
     interpreted_brief: str,
     max_bullets: int,
+    role_profile: str | None = None,
 ) -> str:
     constraints_txt = ", ".join([f"{k}={v}" for k, v in (constraints or {}).items()]) or "none"
     success_txt = "; ".join(success_criteria or []) or "none"
     context_txt = ", ".join([f"{k}={v}" for k, v in (context or {}).items()]) or "none"
 
+    profile = role_profile or ROLE_PROFILES.get(
+        role,
+        f"You are {role}. Analyse the situation from your specific perspective and comply strictly with the active hat rules."
+    )
+
     return f"""
-{ROLE_PROFILES[role]}
+{profile}
 
 Active hat: {hat}
 {HAT_RULES[hat]}

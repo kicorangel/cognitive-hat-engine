@@ -21,6 +21,7 @@ class CognitiveState(TypedDict, total=False):
 
     # A. Context
     idea: str
+    roles: List[Dict[str, Any]]
     objective: str
     constraints: Dict[str, str]
     success_criteria: List[str]

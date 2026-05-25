@@ -30,6 +30,7 @@ def analyze(req: AnalyzeRequest):
     initial_state = {
         "run_id": run_id,
         "idea": req.idea,
+        "roles": [role.model_dump() for role in req.roles] if req.roles else None,
     }
 
     final_state = graph.invoke(initial_state)

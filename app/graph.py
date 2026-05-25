@@ -9,6 +9,40 @@ from .utils import ensure_outputs_bucket, uniq_extend
 from .synthesis import build_blue_hat_prompt, synthesize_blue_hat_without_llm
 from .settings import DEFAULT_HAT_SEQUENCE
 
+def get_configured_roles(state: Dict[str, Any]) -> list[dict[str, str]]:
+    roles = state.get("roles") or []
+
+    valid_roles = []
+    for role in roles:
+        code = str(role.get("code", "")).strip()
+        profile = str(role.get("profile", "")).strip()
+
+        if not code or not profile:
+            continue
+
+        valid_roles.append({
+            "code": code,
+            "name": str(role.get("name", code)).strip() or code,
+            "title": str(role.get("title", "") or "").strip(),
+            "profile": profile,
+        })
+
+    if valid_roles:
+        return valid_roles
+
+    return [
+        {
+            "code": role,
+            "name": role,
+            "title": "",
+            "profile": "",
+        }
+        for role in ROLES
+    ]
+
+
+def get_role_codes(state: Dict[str, Any]) -> list[str]:
+    return [role["code"] for role in get_configured_roles(state)]
 
 def init_state(state: Dict[str, Any]) -> Dict[str, Any]:
     state.setdefault("hat_history", [])
@@ -102,7 +136,9 @@ def run_hat_round(state: Dict[str, Any]) -> Dict[str, Any]:
     if hat == "BLUE":
         return state
 
-    for role in ROLES:
+    for configured_role in get_configured_roles(state):
+        role = configured_role["code"]
+
         prompt = build_role_prompt(
             role=role,
             hat=hat,
@@ -113,6 +149,7 @@ def run_hat_round(state: Dict[str, Any]) -> Dict[str, Any]:
             success_criteria=state.get("success_criteria", []),
             context=state.get("context", {}),
             max_bullets=int(state.get("max_bullets", 5)),
+            role_profile=configured_role.get("profile") or None,
         )
         data = llm.generate_json(prompt)
 
