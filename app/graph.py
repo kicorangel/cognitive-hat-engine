@@ -69,9 +69,6 @@ def init_state(state: Dict[str, Any]) -> Dict[str, Any]:
 
 
     hats = state.get("hat_sequence") or DEFAULT_HAT_SEQUENCE
-    if state.get("include_red_hat") and "RED" not in hats:
-        # inject RED before BLUE by default
-        hats = [h for h in hats if h != "BLUE"] + ["RED", "BLUE"]
     state["hat_sequence"] = hats
 
     # set initial hat

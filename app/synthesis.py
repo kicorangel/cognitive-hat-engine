@@ -45,11 +45,12 @@ def synthesize_blue_hat_without_llm(state: Dict[str, Any]) -> Tuple[str, Dict[st
         "This pack shows the full structure and flow."
     )
     options = {
-        "A": "Build MVP with 3 hats (WHITE/YELLOW/BLACK) + BLUE summary, 6 roles, no memory.",
-        "B": "Add GREEN + Auditor, basic persistence, minimal evaluation.",
-        "C": "Full system: loops for missing data, conflict arbitration, memory per project, dashboards.",
+        "A": "Run the complete advisory flow with WHITE, RED, YELLOW, BLACK, GREEN and BLUE hats.",
+        "B": "Add persistence, evaluation, and reusable role configurations for repeated strategic analyses.",
+        "C": "Evolve into a full cognitive advisory platform with memory, conflict arbitration, dashboards, and governance.",
     }
-    recommendation = "A (start small), then evolve to B once inputs/outputs are stable."
+    recommendation = "A (complete the full hat-based reasoning flow), then evolve to B once inputs and outputs are stable."
+    
     confidence = "low"
     return executive_summary, options, recommendation, confidence
 

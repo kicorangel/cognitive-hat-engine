@@ -8,11 +8,9 @@ class ThinkingRole(BaseModel):
     title: Optional[str] = None
     profile: str = Field(..., min_length=10)
 
-
 class AnalyzeRequest(BaseModel):
     idea: str = Field(..., min_length=5)
     roles: Optional[List[ThinkingRole]] = None
-
 
 class AnalyzeResponse(BaseModel):
     run_id: str
