@@ -5,7 +5,12 @@ from langgraph.graph import StateGraph, END
 from .state import CognitiveState
 from .llm import LLMClient
 from .prompts import ROLES, build_role_prompt
-from .utils import ensure_outputs_bucket, uniq_extend
+from .utils import (
+    ensure_outputs_bucket,
+    split_bullet_items,
+    uniq_extend_semantic,
+    consolidate_items,
+)
 from .synthesis import build_blue_hat_prompt, synthesize_blue_hat_without_llm
 from .settings import DEFAULT_HAT_SEQUENCE
 
@@ -189,32 +194,64 @@ def run_hat_round(state: Dict[str, Any]) -> Dict[str, Any]:
 
         state["agent_interactions"].append(interaction)
 
-        # Consolidate emergent knowledge (light-touch; we do deeper consolidation in BLUE)
-        uniq_extend(state["assumptions"], role_output["assumptions"])
-        uniq_extend(state["open_questions"], role_output["questions"])
+        # Consolidate emergent knowledge.
+        # We use lightweight semantic deduplication because each role may express
+        # the same underlying idea with slightly different wording.
+        uniq_extend_semantic(
+            state["assumptions"],
+            split_bullet_items(role_output["assumptions"]),
+        )
+        uniq_extend_semantic(
+            state["open_questions"],
+            split_bullet_items(role_output["questions"]),
+        )
 
-        # Optionally route some items into category buckets based on hat
+        # Route content items into category buckets based on the active hat.
         if hat == "BLACK":
-            # treat content bullets as candidate risks (rough)
-            uniq_extend(state["risks"], _bullets_to_items(role_output["content"]))
+            uniq_extend_semantic(
+                state["risks"],
+                split_bullet_items(role_output["content"]),
+            )
         elif hat == "YELLOW":
-            uniq_extend(state["opportunities"], _bullets_to_items(role_output["content"]))
+            uniq_extend_semantic(
+                state["opportunities"],
+                split_bullet_items(role_output["content"]),
+            )
         elif hat == "GREEN":
-            uniq_extend(state["alternatives"], _bullets_to_items(role_output["content"]))
+            uniq_extend_semantic(
+                state["alternatives"],
+                split_bullet_items(role_output["content"]),
+            )
 
     state["hat_history"].append(hat)
     return state
 
+def finalize_emergent_knowledge(state: Dict[str, Any]) -> None:
+    """
+    Keeps raw emergent lists for auditability and exposes clean executive lists
+    for API/UI/PDF consumption.
 
-def _bullets_to_items(text: str) -> list[str]:
-    lines = [l.strip() for l in (text or "").splitlines()]
-    items = []
-    for l in lines:
-        l = l.lstrip("-•* ").strip()
-        if l:
-            items.append(l)
-    return items[:10]
+    The role-by-role outputs remain untouched in state["outputs"].
+    """
 
+    list_limits = {
+        "assumptions": 12,
+        "open_questions": 12,
+        "risks": 10,
+        "opportunities": 10,
+        "alternatives": 10,
+    }
+
+    for key, limit in list_limits.items():
+        raw_key = f"raw_{key}"
+
+        if raw_key not in state:
+            state[raw_key] = list(state.get(key, []) or [])
+
+        state[key] = consolidate_items(
+            state.get(key, []) or [],
+            max_items=limit,
+        )
 
 def blue_hat_synthesis(state: Dict[str, Any]) -> Dict[str, Any]:
     state.setdefault("outputs", {})
@@ -239,6 +276,9 @@ def blue_hat_synthesis(state: Dict[str, Any]) -> Dict[str, Any]:
         state["recommendation"] = recommendation
         state["decision_confidence"] = confidence
         state["current_hat"] = "BLUE"
+
+        finalize_emergent_knowledge(state)
+
         state["analysis_metrics"] = build_analysis_metrics(state)
         return state
 
@@ -256,6 +296,8 @@ def blue_hat_synthesis(state: Dict[str, Any]) -> Dict[str, Any]:
     state["tradeoffs"] = data.get("tradeoffs") or state.get("tradeoffs", [])
 
     state["current_hat"] = "BLUE"
+
+    finalize_emergent_knowledge(state)
 
     state["analysis_metrics"] = build_analysis_metrics(state)
 

@@ -72,6 +72,13 @@ Rules:
 - Obey the active hat rules strictly.
 - Do not invent facts or numbers. If unknown, add to questions or assumptions (as appropriate for the hat).
 - Keep it concise. Max {max_bullets} bullets in content.
+- Use one idea per bullet.
+- Do not combine several ideas in one bullet using semicolons.
+- Do not use inline bullet lists with the "•" symbol.
+- Each assumption must contain one assumption only.
+- Each question must contain one question only.
+- Avoid repeating generic points already implied by the brief.
+- Make assumptions and questions specific to your role and the active hat.
 """
 
 def build_role_prompt(
