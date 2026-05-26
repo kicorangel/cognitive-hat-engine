@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api_models import AnalyzeRequest, AnalyzeResponse
-from .graph import build_graph
+from .graph import build_graph, build_analysis_metrics
 from .utils import new_run_id
 
 app = FastAPI(title="Cognitive Hat Engine", version="0.1.0")
@@ -39,7 +39,7 @@ def analyze(req: AnalyzeRequest):
     options = final_state.get("options") or {"A": "", "B": "", "C": ""}
     recommendation = final_state.get("recommendation") or ""
     decision_confidence = final_state.get("decision_confidence") or "medium"
-    metrics = final_state.get("analysis_metrics") or {}
+    metrics = final_state.get("analysis_metrics") or build_analysis_metrics(final_state)
 
     return AnalyzeResponse(
         run_id=run_id,

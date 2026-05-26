@@ -62,5 +62,9 @@ class CognitiveState(TypedDict, total=False):
     max_bullets: int
     include_red_hat: bool
 
+     # Analysis trace and metrics
+    agent_interactions: List[Dict[str, Any]]
+    analysis_metrics: Dict[str, Any]
+
     # Debug
     debug: Dict[str, Any]

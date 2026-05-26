@@ -131,6 +131,17 @@ Rules:
 
 
 def run_hat_round(state: Dict[str, Any]) -> Dict[str, Any]:
+    state.setdefault("outputs", {})
+    state.setdefault("agent_interactions", [])
+    state.setdefault("analysis_metrics", {})
+
+    state.setdefault("assumptions", [])
+    state.setdefault("open_questions", [])
+    state.setdefault("risks", [])
+    state.setdefault("opportunities", [])
+    state.setdefault("alternatives", [])
+    state.setdefault("hat_history", [])
+    
     llm = LLMClient()
     state["mode"] = llm.mode
 
@@ -165,6 +176,7 @@ def run_hat_round(state: Dict[str, Any]) -> Dict[str, Any]:
             "assumptions": data.get("assumptions") or [],
             "questions": data.get("questions") or [],
         }
+
         state["outputs"][hat][role].append(role_output)
 
         interaction = {
@@ -208,6 +220,18 @@ def _bullets_to_items(text: str) -> list[str]:
 
 
 def blue_hat_synthesis(state: Dict[str, Any]) -> Dict[str, Any]:
+    state.setdefault("outputs", {})
+    state.setdefault("agent_interactions", [])
+    state.setdefault("analysis_metrics", {})
+
+    state.setdefault("risks", [])
+    state.setdefault("open_questions", [])
+    state.setdefault("next_steps", [])
+    state.setdefault("experiments", [])
+    state.setdefault("metrics", [])
+    state.setdefault("contradictions", [])
+    state.setdefault("tradeoffs", [])
+    
     llm = LLMClient()
     state["mode"] = llm.mode
 
@@ -309,7 +333,7 @@ def build_analysis_metrics(state: Dict[str, Any]) -> Dict[str, Any]:
         "roles_count": len(get_configured_roles(state)),
         "agent_hats_count": len([
             hat for hat in state.get("hat_sequence", [])
-            if hat != "BLUE"
+            if str(hat).upper() != "BLUE"
         ]),
         "agent_interactions_count": agent_interactions_count,
         "blue_synthesis_count": 1,
