@@ -39,6 +39,7 @@ def analyze(req: AnalyzeRequest):
     options = final_state.get("options") or {"A": "", "B": "", "C": ""}
     recommendation = final_state.get("recommendation") or ""
     decision_confidence = final_state.get("decision_confidence") or "medium"
+    metrics = final_state.get("analysis_metrics") or {}
 
     return AnalyzeResponse(
         run_id=run_id,
@@ -48,5 +49,8 @@ def analyze(req: AnalyzeRequest):
         options=options,
         recommendation=recommendation,
         decision_confidence=decision_confidence,
+        agent_interactions_count=int(metrics.get("agent_interactions_count", 0)),
+        llm_calls_count=int(metrics.get("llm_calls_count", 0)),
+        analysis_metrics=metrics,
         state=final_state,
     )

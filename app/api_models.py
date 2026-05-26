@@ -23,5 +23,9 @@ class AnalyzeResponse(BaseModel):
     recommendation: str
     decision_confidence: str
 
+    agent_interactions_count: int = 0
+    llm_calls_count: int = 0
+    analysis_metrics: Dict = Field(default_factory=dict)
+    
     # audit payload
     state: Dict

@@ -64,6 +64,8 @@ def init_state(state: Dict[str, Any]) -> Dict[str, Any]:
     state.setdefault("success_criteria", [])
     state.setdefault("context", {})
     state.setdefault("interpreted_brief", "")
+    state.setdefault("agent_interactions", [])
+    state.setdefault("analysis_metrics", {})
 
 
     hats = state.get("hat_sequence") or DEFAULT_HAT_SEQUENCE
@@ -165,6 +167,19 @@ def run_hat_round(state: Dict[str, Any]) -> Dict[str, Any]:
         }
         state["outputs"][hat][role].append(role_output)
 
+        interaction = {
+            "interaction_number": len(state["agent_interactions"]) + 1,
+            "type": "agent_hat_response",
+            "role": role,
+            "role_name": configured_role.get("name", role),
+            "role_title": configured_role.get("title", ""),
+            "hat": hat,
+            "iteration": int(state.get("iteration", 0)),
+            "confidence": role_output.get("confidence"),
+        }
+
+        state["agent_interactions"].append(interaction)
+
         # Consolidate emergent knowledge (light-touch; we do deeper consolidation in BLUE)
         uniq_extend(state["assumptions"], role_output["assumptions"])
         uniq_extend(state["open_questions"], role_output["questions"])
@@ -203,6 +218,7 @@ def blue_hat_synthesis(state: Dict[str, Any]) -> Dict[str, Any]:
         state["recommendation"] = recommendation
         state["decision_confidence"] = confidence
         state["current_hat"] = "BLUE"
+        state["analysis_metrics"] = build_analysis_metrics(state)
         return state
 
     prompt = build_blue_hat_prompt(state)
@@ -219,6 +235,9 @@ def blue_hat_synthesis(state: Dict[str, Any]) -> Dict[str, Any]:
     state["tradeoffs"] = data.get("tradeoffs") or state.get("tradeoffs", [])
 
     state["current_hat"] = "BLUE"
+
+    state["analysis_metrics"] = build_analysis_metrics(state)
+
     return state
 
 
@@ -271,3 +290,30 @@ def build_graph():
     g.add_edge("blue_hat", END)
 
     return g.compile()
+
+def count_agent_interactions(state: Dict[str, Any]) -> int:
+    outputs = state.get("outputs", {}) or {}
+
+    return sum(
+        len(role_outputs or [])
+        for hat_outputs in outputs.values()
+        for role_outputs in (hat_outputs or {}).values()
+    )
+
+def build_analysis_metrics(state: Dict[str, Any]) -> Dict[str, Any]:
+    agent_interactions_count = count_agent_interactions(state)
+    mode = state.get("mode", "mock")
+
+    return {
+        **(state.get("analysis_metrics") or {}),
+        "roles_count": len(get_configured_roles(state)),
+        "agent_hats_count": len([
+            hat for hat in state.get("hat_sequence", [])
+            if hat != "BLUE"
+        ]),
+        "agent_interactions_count": agent_interactions_count,
+        "blue_synthesis_count": 1,
+        "brief_interpretation_count": 1,
+        "llm_calls_count": agent_interactions_count + 2 if mode == "llm" else 0,
+        "simulated_interactions_count": agent_interactions_count if mode == "mock" else 0,
+    }
