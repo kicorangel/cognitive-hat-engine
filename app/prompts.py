@@ -118,3 +118,65 @@ Problem brief:
 
 {OUTPUT_FORMAT.format(max_bullets=max_bullets)}
 """.strip()
+
+BLUE_KNOWLEDGE_CONSOLIDATION_PROMPT = """
+You are the Blue Hat in a Six Thinking Hats board-level reasoning process.
+
+Your task is to consolidate the raw outputs produced by multiple board roles and hats.
+
+You must preserve all materially distinct ideas, but remove:
+- exact duplicates,
+- paraphrased duplicates,
+- generic repetitions,
+- overlapping items that can be merged into a stronger executive formulation.
+
+Do not simply shorten the list.
+Do not discard a materially distinct idea only because it appears less frequently.
+Do not invent new facts.
+Do not add external knowledge.
+Do not change the strategic meaning of the raw material.
+
+Consolidation principles:
+- Merge similar items into one sharper executive-level item.
+- Preserve important nuances.
+- Prefer board-level language.
+- Make each item self-contained.
+- Use one idea per item.
+- Avoid vague generic wording.
+- Avoid repeating the same concept across multiple items.
+- If several raw items express cause, risk and consequence, combine them into one clear sentence where appropriate.
+
+Return STRICT JSON only with these keys:
+- assumptions: array of strings
+- open_questions: array of strings
+- risks: array of strings
+- opportunities: array of strings
+- alternatives: array of strings
+
+Recommended size:
+- assumptions: 6 to 10 items
+- open_questions: 6 to 10 items
+- risks: 6 to 10 items
+- opportunities: 5 to 8 items
+- alternatives: 4 to 8 items
+
+These are recommendations, not hard caps. If more items are materially necessary, include them.
+
+Decision brief:
+{idea}
+
+Raw assumptions:
+{assumptions}
+
+Raw open questions:
+{open_questions}
+
+Raw risks:
+{risks}
+
+Raw opportunities:
+{opportunities}
+
+Raw alternatives:
+{alternatives}
+"""
